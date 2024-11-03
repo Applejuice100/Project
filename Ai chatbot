@@ -1,0 +1,134 @@
+import random
+import streamlit as st
+
+# Function to generate an order based on the specified type
+def generate_order(order_size, burger_type, drink_type):
+    order_number = random.randint(100, 999)  # Generate a random number between 100 and 999
+    return (order_number, burger_type, drink_type)  # Return number, burger, and drink types
+
+# Function to process orders
+def process_orders(order_details, order_size, order_mode):
+    if order_details:
+        order_number, burger_type, drink_type = order_details
+        order_classification = "Big Order" if order_size.lower() == "big" else "Small Order"
+        st.write(f"**Order Number:** {order_number}")
+        st.write(f"**Order Type:** {order_classification}")
+        st.write(f"**Mode:** {order_mode}")
+        st.write(f"**Burger:** {burger_type}")
+        st.write(f"**Drink:** {drink_type}")
+        st.markdown("---")  # Adds a horizontal line for separation
+    else:
+        st.write("No orders to process.")
+
+# Smarter chatbot responses based on user input
+def chatbot_response(user_input):
+    user_input = user_input.lower()
+    
+    if "help" in user_input:
+        return "How can I assist you? You can ask about how to order, changing orders, menu options, or anything related to our services."
+    elif "how do i order" in user_input or "place an order" in user_input:
+        return "To place an order, select your burger and drink options, choose your order size, and click 'Generate Order'."
+    elif "change order" in user_input or "wrong order" in user_input:
+        return "If you've placed a wrong order, we will refund it and you can place a new one."
+    elif "menu" in user_input:
+        return "We offer Chicken Burger, Beef Burger, and Fish Burger. For drinks, we have Cola, Pepsi, and Apple Juice."
+    elif "thank you" in user_input or "thanks" in user_input:
+        return "You're welcome! I'm here to help you anytime."
+    elif "complain" in user_input:
+        return "You can file a complaint by contacting support or filling out our complaint form."
+    else:
+        return "I'm not sure what you need help with. You can ask for help, inquire about the menu, or place an order."
+
+# Streamlit app code
+st.title("🍔 Order Processing App with Chatbot 🤖")
+st.markdown("---")  # Adds a horizontal line for section separation
+
+# Section: Order Form
+st.header("Place Your Order")
+st.subheader("Select Your Preferences")
+
+# Initialize session state for order inputs if not already set
+if 'order_size' not in st.session_state:
+    st.session_state.order_size = "Big"  # Set default value
+if 'order_mode' not in st.session_state:
+    st.session_state.order_mode = "Dine In"
+if 'burger_type' not in st.session_state:
+    st.session_state.burger_type = "Chicken Burger"
+if 'drink_type' not in st.session_state:
+    st.session_state.drink_type = "Cola"
+
+# Input: Specify whether the order is big or small
+order_size = st.selectbox("Order Size", ["Big", "Small"], key="order_size")
+
+# Input: Specify whether the order is for dine in or take out
+order_mode = st.selectbox("Order Mode", ["Dine In", "Take Out"], key="order_mode")
+
+# Input: Select type of burger
+burger_type = st.selectbox("Burger Type", ["Chicken Burger", "Beef Burger", "Fish Burger"], key="burger_type")
+
+# Input: Select type of drink
+drink_type = st.selectbox("Drink Type", ["Cola", "Pepsi", "Apple Juice"], key="drink_type")
+
+# Generate order when button is clicked
+if st.button("Generate Order"):
+    order_details = generate_order(st.session_state.order_size, st.session_state.burger_type, st.session_state.drink_type)
+    st.write("### Your Order")
+    process_orders(order_details, st.session_state.order_size, st.session_state.order_mode)
+    
+    # Store the order in the session state
+    if 'orders' not in st.session_state:
+        st.session_state.orders = []
+    st.session_state.orders.append(order_details)
+
+# Button to display all orders
+if st.button("Show All Orders"):
+    if 'orders' in st.session_state and st.session_state.orders:
+        st.write("### All Orders")
+        for order in st.session_state.orders:
+            process_orders(order, st.session_state.order_size, st.session_state.order_mode)
+    else:
+        st.write("No orders have been placed yet.")
+
+# Button to reset all inputs to default values
+if st.button("Reset to Default"):
+    st.session_state.order_size = "Big"
+    st.session_state.order_mode = "Dine In"
+    st.session_state.burger_type = "Chicken Burger"
+    st.session_state.drink_type = "Cola"
+
+st.markdown("---")  # Adds a horizontal line for section separation
+
+# Section: Chatbot
+st.header("💬 Chat with our Assistant")
+st.subheader("Ask anything related to your order")
+
+user_message = st.text_input("You:", placeholder="Ask for help or information...")
+
+if st.button("Send Message"):
+    if user_message:
+        # Add user message to chat history
+        if 'chat_history' not in st.session_state:
+            st.session_state.chat_history = []
+        st.session_state.chat_history.append(f"**You:** {user_message}")
+        
+        # Get chatbot response
+        response = chatbot_response(user_message)
+        st.session_state.chat_history.append(f"**Assistant:** {response}")
+
+# Display chat history
+if 'chat_history' in st.session_state:
+    st.write("### Chat History")
+    for message in st.session_state.chat_history:
+        st.write(message)
+
+# Section: Example questions the bot can answer
+st.markdown("### Example Questions You Can Ask the Bot:")
+st.markdown("""
+- How do I place an order?
+- What’s on the menu?
+- What happens if I make a wrong order?
+- Can I change my order?
+- How can I file a complaint?
+- How do I get a refund?
+- What’s my order status?
+""")
